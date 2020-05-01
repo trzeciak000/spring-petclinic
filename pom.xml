@@ -28,7 +28,10 @@
     <wro4j.version>1.8.0</wro4j.version>
 
     <jacoco.version>0.8.5</jacoco.version>
+    <docker-maven-plugin.version>1.2.0</docker-maven-plugin.version>
     <spring-format.version>0.0.19</spring-format.version>
+    <base.java.image.name>openjdk</base.java.image.name>
+    <base.java.image.tag>8-jdk</base.java.image.tag>
 
   </properties>
 
@@ -239,6 +242,37 @@
             <version>${mockito.version}</version>
           </dependency>
         </dependencies>
+      </plugin>
+      <!--spotify docker/maven plugin -->
+      <plugin>
+          <groupId>com.spotify</groupId>
+          <artifactId>docker-maven-plugin</artifactId>
+          <version>${docker-maven-plugin.version}</version>
+          <executions>
+              <execution>
+                  <id>build-image</id>
+                  <phase>package</phase>
+                  <goals>
+                      <goal>build</goal>
+                  </goals>
+              </execution>
+          </executions>
+          <configuration>
+              <imageName>docker-registry.test-praca.com:5000/${project.artifactId}:${project.version}</imageName>
+              <baseImage>${base.java.image.name}:${base.java.image.tag}</baseImage>
+              <entryPoint>["java", "-jar", "/${project.build.finalName}.jar"]</entryPoint>
+              <exposes>
+                  <expose>8080</expose>
+              </exposes>
+              <!-- copy the service's jar file from target into the root directory of the image -->
+              <resources>
+                  <resource>
+                      <targetPath>/</targetPath>
+                      <directory>${project.build.directory}</directory>
+                      <include>${project.build.finalName}.jar</include>
+                  </resource>
+              </resources>
+          </configuration>
       </plugin>
     </plugins>
   </build>
